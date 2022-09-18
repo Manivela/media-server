@@ -1,0 +1,169 @@
+version: "2.1"
+name: media-server
+services:
+  # VPN
+  surfshark:
+    image: ilteoood/docker-surfshark
+    container_name: surfshark
+    env_file:
+      - .env
+    environment:
+      - CONNECTION_TYPE=udp
+      - LAN_NETWORK=
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    ports:
+      - 9091:9091 # transmission
+      - 9117:9117 # jackett
+      - 7878:7878 # radarr
+      - 8989:8989 # sonarr
+      - 9696:9696 # prowlarr
+    restart: unless-stopped
+    dns:
+      - 1.1.1.1
+
+  # Downloads
+  transmission:
+    image: linuxserver/transmission:latest
+    container_name: transmission
+    environment:
+      - PUID=1000
+      - UGID=1000
+      - TZ=Europe/London
+      - TRANSMISSION_WEB_HOME=/transmission-web-control/
+    volumes:
+      - ./docker/transmission/config:/config
+      - ./data/downloads:/downloads
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    restart: unless-stopped
+    network_mode: service:surfshark
+
+  # Indexers
+  jackett:
+    image: ghcr.io/linuxserver/jackett:latest
+    container_name: jackett
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - AUTO_UPDATE=true
+      - RUN_OPTS=
+    volumes:
+      - ./docker/jackett/config:/config
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    restart: unless-stopped
+    depends_on:
+      - flaresolverr
+    network_mode: service:surfshark
+
+  # Cloudflare Captcha solver
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - LOG_LEVEL=info
+      - LOG_HTML=false
+      - CAPTCHA_SOLVER=hcaptcha-solver
+        #- CAPTCHA_SOLVER=harvester
+        #- HARVESTER_ENDPOINT=https://127.0.0.1:5000/token
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    restart: unless-stopped
+    network_mode: service:surfshark
+
+  # Movies
+  radarr:
+    image: ghcr.io/linuxserver/radarr:develop
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./docker/radarr/config:/config
+      - ./data:/data
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    restart: unless-stopped
+    depends_on:
+      - transmission
+      - jackett
+    network_mode: service:surfshark
+
+  # TV Shows
+  sonarr:
+    image: ghcr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./docker/sonarr/config:/config
+      - ./data:/data
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+    restart: unless-stopped
+    depends_on:
+      - transmission
+      - jackett
+    network_mode: service:surfshark
+
+  # Media Server
+  jellyfin:
+    image: ghcr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - JELLYFIN_PublishedServerUrl=192.168.1.107
+    volumes:
+      - ./docker/jellyfin/config:/config
+      - ./data/media:/data/media
+    ports:
+      - 8096:8096
+      - 8920:8920
+      - 7359:7359/udp
+      - 1900:1900/udp
+    restart: unless-stopped
+    depends_on:
+      - radarr
+      - sonarr
+
+  # More indexers but automatic this time
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:develop
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - ./docker/prowlarr/config:/config
+    restart: unless-stopped
+    network_mode: service:surfshark
+
+  # Another Media Server
+  # Doesnt work on windows
+  # plex:
+  #   image: lscr.io/linuxserver/plex:latest
+  #   container_name: plex
+  #   network_mode: host
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - VERSION=docker
+  #   volumes:
+  #     - ./docker/plex/config:/config
+  #     - ./data/media/series:/tv
+  #     - ./data/media/movies:/movies
+  #     - ./data/media/anime:/anime
+  #   restart: unless-stopped

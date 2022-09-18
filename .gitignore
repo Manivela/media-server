@@ -1,0 +1,9 @@
+data/downloads/*
+data/media/anime/*
+data/media/movies/*
+data/media/series/*
+**/Jackett/**/log.txt
+**/transmission/config/resume/*
+**/transmission/config/torrents/*
+docker/*
+.env
