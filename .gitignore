@@ -7,3 +7,4 @@ data/media/series/*
 **/transmission/config/torrents/*
 docker/*
 .env
+jellyfin/
