@@ -1,73 +1,25 @@
 version: "2.1"
 name: media-server
 services:
-  # VPN
-  # surfshark:
-  #   image: ilteoood/docker-surfshark
-  #   container_name: surfshark
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     - CONNECTION_TYPE=udp
-  #     - LAN_NETWORK=
-  #   cap_add:
-  #     - NET_ADMIN
-  #   devices:
-  #     - /dev/net/tun
-  #   ports:
-  #     - 9091:9091 # transmission
-  #     - 9117:9117 # jackett
-  #     - 7878:7878 # radarr
-  #     - 8989:8989 # sonarr
-  #     - 9696:9696 # prowlarr
-  #   restart: unless-stopped
-  #   dns:
-  #     - 1.1.1.1
-
-  # Downloads
   transmission:
     image: linuxserver/transmission:latest
     container_name: transmission
+    restart: unless-stopped
     environment:
       - PUID=1000
       - UGID=1000
       - TZ=Europe/London
-      - TRANSMISSION_WEB_HOME=/transmission-web-control/
+      - USER=${USER}
+      - PASS=${PASS}
     volumes:
       - ./docker/transmission/config:/config
-      - ./data/downloads:/downloads
-    # sysctls:
-    #   - net.ipv4.conf.all.src_valid_mark=1
-    restart: unless-stopped
-    # network_mode: service:surfshark
+      - "D:\\data\\downloads:/downloads"
     ports:
-      - 9091:9091 # transmission
-
-  # Indexers
-  # jackett:
-  #   image: ghcr.io/linuxserver/jackett:latest
-  #   container_name: jackett
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=Europe/London
-  #     - AUTO_UPDATE=true
-  #     - RUN_OPTS=
-  #   volumes:
-  #     - ./docker/jackett/config:/config
-  #   sysctls:
-  #     - net.ipv4.conf.all.src_valid_mark=1
-  #   restart: unless-stopped
-  #   depends_on:
-  #     - flaresolverr
-  #   # network_mode: service:surfshark
-  #   ports:
-  #     - 9117:9117 # jackett
-
-  # Cloudflare Captcha solver
+      - 9091:9091
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
     container_name: flaresolverr
+    restart: unless-stopped
     environment:
       - PUID=1000
       - PGID=1000
@@ -75,122 +27,94 @@ services:
       - LOG_LEVEL=info
       - LOG_HTML=false
       - CAPTCHA_SOLVER=hcaptcha-solver
-        #- CAPTCHA_SOLVER=harvester
-        #- HARVESTER_ENDPOINT=https://127.0.0.1:5000/token
-    # sysctls:
-    #   - net.ipv4.conf.all.src_valid_mark=1
-    restart: unless-stopped
-    # network_mode: service:surfshark
 
-  # Movies
   radarr:
     image: ghcr.io/linuxserver/radarr:develop
     container_name: radarr
+    restart: unless-stopped
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/London
     volumes:
       - ./docker/radarr/config:/config
-      - ./data:/data
-    # sysctls:
-    #   - net.ipv4.conf.all.src_valid_mark=1
-    restart: unless-stopped
+      - "D:\\data:/data"
     depends_on:
       - transmission
       - prowlarr
-    # network_mode: service:surfshark
     ports:
-      - 7878:7878 # radarr
+      - 7878:7878
 
-  # TV Shows
   sonarr:
     image: ghcr.io/linuxserver/sonarr:latest
     container_name: sonarr
+    restart: unless-stopped
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/London
     volumes:
       - ./docker/sonarr/config:/config
-      - ./data:/data
-    # sysctls:
-    #   - net.ipv4.conf.all.src_valid_mark=1
-    restart: unless-stopped
+      - "D:\\data:/data"
     depends_on:
       - transmission
       - prowlarr
-    # network_mode: service:surfshark
     ports:
-      - 8989:8989 # sonarr
-
-  # # Media Server
-  # Install jellyfin on host to easily make use of your gpu
-  # jellyfin:
-  #   image: ghcr.io/linuxserver/jellyfin:latest
-  #   container_name: jellyfin
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=Europe/London
-  #   volumes:
-  #     - ./docker/jellyfin/config:/config
-  #     - ./data/media:/data/media
-  #   ports:
-  #     - 8096:8096
-  #     - 8920:8920
-  #     - 7359:7359/udp
-  #     - 1900:1900/udp
-  #   restart: unless-stopped
-  #   depends_on:
-  #     - radarr
-  #     - sonarr
-
-  # More indexers but automatic this time
+      - 8989:8989
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:develop
     container_name: prowlarr
+    restart: unless-stopped
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/London
     volumes:
       - ./docker/prowlarr/config:/config
-    restart: unless-stopped
-    # network_mode: service:surfshark
     ports:
-      - 9696:9696 # prowlarr
+      - 9696:9696
     depends_on:
       - flaresolverr
 
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
     container_name: bazarr
+    restart: unless-stopped
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/London
     volumes:
       - ./docker/bazarr/config:/config
-      - ./data:/data
+      - "D:\\data:/data"
     ports:
       - 6767:6767
-    restart: unless-stopped
 
-  # Another Media Server if you want
-  # plex:
-  #   image: lscr.io/linuxserver/plex:latest
-  #   container_name: plex
-  #   network_mode: host
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - VERSION=docker
-  #   volumes:
-  #     - ./docker/plex/config:/config
-  #     - ./data/media/series:/tv
-  #     - ./data/media/movies:/movies
-  #     - ./data/media/anime:/anime
-  #   restart: unless-stopped
+  caddy:
+    container_name: caddy
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      - EMAIL=${EMAIL}
+      - DOMAIN=${DOMAIN}
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - $PWD/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - transmission
+      - flaresolverr
+      - radarr
+      - sonarr
+      - prowlarr
+      - bazarr
+
+volumes:
+  caddy_data:
+  caddy_config:

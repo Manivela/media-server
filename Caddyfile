@@ -1,0 +1,21 @@
+{
+	email {$EMAIL}
+}
+jellyfin.{$DOMAIN} {
+	reverse_proxy host.docker.internal:8096
+}
+transmission.{$DOMAIN} {
+	reverse_proxy transmission:9091
+}
+radarr.{$DOMAIN} {
+	reverse_proxy radarr:7878
+}
+sonarr.{$DOMAIN} {
+	reverse_proxy sonarr:8989
+}
+prowlarr.{$DOMAIN} {
+	reverse_proxy prowlarr:9696
+}
+bazarr.{$DOMAIN} {
+	reverse_proxy bazarr:6767
+}
