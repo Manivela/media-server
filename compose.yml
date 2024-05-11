@@ -16,6 +16,8 @@ services:
       - "D:\\data\\downloads:/downloads"
     ports:
       - 9091:9091
+      - 51413:51413
+      - 51413:51413/udp
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
     container_name: flaresolverr
