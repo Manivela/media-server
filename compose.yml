@@ -78,19 +78,30 @@ services:
     depends_on:
       - flaresolverr
 
-  bazarr:
-    image: lscr.io/linuxserver/bazarr:latest
-    container_name: bazarr
-    restart: unless-stopped
+  # bazarr:
+  #   image: lscr.io/linuxserver/bazarr:latest
+  #   container_name: bazarr
+  #   restart: unless-stopped
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - TZ=Europe/London
+  #   volumes:
+  #     - ./docker/bazarr/config:/config
+  #     - "D:\\data:/data"
+  #   ports:
+  #     - 6767:6767
+
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr
+    container_name: recyclarr
+    user: 1000:1000
+    volumes:
+      - ./docker/recyclarr/config:/config
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/London
-    volumes:
-      - ./docker/bazarr/config:/config
-      - "D:\\data:/data"
-    ports:
-      - 6767:6767
 
   caddy:
     container_name: caddy
@@ -115,7 +126,7 @@ services:
       - radarr
       - sonarr
       - prowlarr
-      - bazarr
+      # - bazarr
 
 volumes:
   caddy_data:
