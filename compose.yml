@@ -2,7 +2,7 @@ name: media-server
 
 services:
   transmission:
-    image: linuxserver/transmission:latest
+    image: lscr.io/linuxserver/transmission:latest
     container_name: transmission
     restart: unless-stopped
     environment:
