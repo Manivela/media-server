@@ -8,12 +8,12 @@ services:
     environment:
       - PUID=1000
       - UGID=1000
-      - TZ=Europe/London
+      - TZ=Europe/Istanbul
       - USER=${USER}
       - PASS=${PASS}
     volumes:
       - ./docker/transmission/config:/config
-      - "D:\\data\\downloads:/downloads"
+      - /home/yunus/Downloads/transmission:/downloads
     ports:
       - 9091:9091
       - 51413:51413
@@ -25,7 +25,7 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Europe/London
+      - TZ=Europe/Istanbul
       - LOG_LEVEL=info
       - LOG_HTML=false
       - CAPTCHA_SOLVER=hcaptcha-solver
@@ -37,10 +37,11 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Europe/London
+      - TZ=Europe/Istanbul
     volumes:
       - ./docker/radarr/config:/config
-      - "D:\\data:/data"
+      - /media/yunus/4tb/media:/data
+      - /home/yunus/Downloads/transmission:/downloads
     depends_on:
       - transmission
       - prowlarr
@@ -54,10 +55,11 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Europe/London
+      - TZ=Europe/Istanbul
     volumes:
       - ./docker/sonarr/config:/config
-      - "D:\\data:/data"
+      - /media/yunus/4tb/media:/data
+      - /home/yunus/Downloads/transmission:/downloads
     depends_on:
       - transmission
       - prowlarr
@@ -70,27 +72,13 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Europe/London
+      - TZ=Europe/Istanbul
     volumes:
       - ./docker/prowlarr/config:/config
     ports:
       - 9696:9696
     depends_on:
       - flaresolverr
-
-  # bazarr:
-  #   image: lscr.io/linuxserver/bazarr:latest
-  #   container_name: bazarr
-  #   restart: unless-stopped
-  #   environment:
-  #     - PUID=1000
-  #     - PGID=1000
-  #     - TZ=Europe/London
-  #   volumes:
-  #     - ./docker/bazarr/config:/config
-  #     - "D:\\data:/data"
-  #   ports:
-  #     - 6767:6767
 
   recyclarr:
     image: ghcr.io/recyclarr/recyclarr
@@ -101,7 +89,23 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
-      - TZ=Europe/London
+      - TZ=Europe/Istanbul
+
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    runtime: nvidia
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Istanbul
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      - ./docker/jellyfin/library:/config
+      - /media/yunus/4tb/media:/data
+    ports:
+      - "8096:8096"
 
   caddy:
     container_name: caddy
@@ -126,7 +130,7 @@ services:
       - radarr
       - sonarr
       - prowlarr
-      # - bazarr
+      - jellyfin
 
 volumes:
   caddy_data:

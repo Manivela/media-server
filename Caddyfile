@@ -2,7 +2,7 @@
 	email {$EMAIL}
 }
 jellyfin.{$DOMAIN} {
-	reverse_proxy host.docker.internal:8096
+	reverse_proxy jellyfin:8096
 }
 transmission.{$DOMAIN} {
 	reverse_proxy transmission:9091
@@ -15,7 +15,4 @@ sonarr.{$DOMAIN} {
 }
 prowlarr.{$DOMAIN} {
 	reverse_proxy prowlarr:9696
-}
-bazarr.{$DOMAIN} {
-	reverse_proxy bazarr:6767
 }
